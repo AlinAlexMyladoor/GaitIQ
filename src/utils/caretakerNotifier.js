@@ -15,9 +15,9 @@ export const DEFAULT_CONFIG = {
   telegramBotToken: '',
   telegramChatId: '',
   botUsername: '',        // filled in after the token is verified
-  autoNotify: false,      // send a message when a site goes over the threshold
+  autoNotify: true,       // send a message automatically when a site goes over the threshold
   notifyOffline: true,    // also send a message when the insole stops streaming
-  cooldownMinutes: 5,
+  cooldownMinutes: 0.5,   // 30 seconds default for real-time up-to-date alerts
 };
 
 /** Reads the saved config; older saves (WhatsApp / webhook era) are upgraded transparently. */
@@ -31,9 +31,9 @@ export const getStoredCaretakerConfig = () => {
         telegramBotToken: saved.telegramBotToken || '',
         telegramChatId: saved.telegramChatId || '',
         botUsername: saved.botUsername || '',
-        autoNotify: !!saved.autoNotify,
+        autoNotify: saved.autoNotify !== false,
         notifyOffline: saved.notifyOffline !== false,
-        cooldownMinutes: Number(saved.cooldownMinutes) || DEFAULT_CONFIG.cooldownMinutes,
+        cooldownMinutes: Number(saved.cooldownMinutes) > 0 ? Number(saved.cooldownMinutes) : DEFAULT_CONFIG.cooldownMinutes,
       };
     }
   } catch (e) {
@@ -103,18 +103,25 @@ const clock = () => new Date().toLocaleTimeString('en-GB', { hour12: false });
 
 const withRecipient = (config, lines) => (config.recipientName ? [`<i>For ${esc(config.recipientName)}</i>`, ...lines] : lines);
 
-export const formatOverloadMessage = (config, { locationName, normalizedLoad, thresholdNorm, gaitPhase, rawVal }) =>
-  withRecipient(config, [
-    '🔴 <b>GaitIQ · Pressure alert</b>',
+export const formatOverloadMessage = (config, { locationName, normalizedLoad, thresholdNorm, gaitPhase, rawVal }) => {
+  const isCritical = Number(normalizedLoad) >= 90;
+  const emoji = isCritical ? '🚨' : '🔴';
+  const header = isCritical ? 'CRITICAL PRESSURE SPIKE' : 'High Pressure Alert';
+
+  return withRecipient(config, [
+    `${emoji} <b>GaitIQ · ${header}</b>`,
     '',
-    `<b>Site</b>   ${esc(locationName)}`,
-    `<b>Load</b>   ${esc(normalizedLoad)}%  (limit ${esc(thresholdNorm)}%)`,
-    `<b>Phase</b>  ${esc(gaitPhase || 'Walking')}`,
-    rawVal != null ? `<b>Raw</b>    ${esc(Math.round(Number(rawVal)))} ADC` : null,
-    `<b>Time</b>   ${clock()}`,
+    `<b>Sensor Site:</b>  ${esc(locationName)}`,
+    `<b>Measured Load:</b> <b>${esc(normalizedLoad)}%</b> (Limit: ${esc(thresholdNorm)}%)`,
+    `<b>Gait Phase:</b>    ${esc(gaitPhase || 'Dynamic Stance')}`,
+    rawVal != null ? `<b>Raw ADC:</b>       ${esc(Math.round(Number(rawVal)))}` : null,
+    `<b>Time:</b>          ${clock()}`,
     '',
-    'Please check the insole fit and encourage the wearer to offload pressure.',
+    isCritical
+      ? '⚠️ <i>Immediate pressure offloading advised to avoid tissue damage.</i>'
+      : '<i>Please check insole fit and wearer pressure distribution.</i>',
   ].filter((l) => l !== null)).join('\n');
+};
 
 export const formatOfflineMessage = (config, { silentSeconds }) =>
   withRecipient(config, [

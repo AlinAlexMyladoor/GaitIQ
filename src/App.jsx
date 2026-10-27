@@ -94,6 +94,7 @@ export default function App() {
   const lastPacketArrivalRef = useRef(null);
   const packetIntervalsRef = useRef([]);
   const lastNotificationRef = useRef(0);
+  const lastNotificationBySensorRef = useRef({});
   const lastTickTimeRef = useRef(0);
   const processRef = useRef(() => {});
   const notifConfigRef = useRef(null);
@@ -217,8 +218,13 @@ export default function App() {
 
           if (soundAlert) playWarningBeep(880, 0.12);
 
-          if (notificationConfig.autoNotify && isTelegramReady(notificationConfig) && (now - lastNotificationRef.current > cooldownMs)) {
+          const lastSensorNotif = lastNotificationBySensorRef.current[sensorKey] || 0;
+          const globalPassed = (now - lastNotificationRef.current) >= 6000;
+          const sensorPassed = (now - lastSensorNotif) >= cooldownMs;
+
+          if (notificationConfig.autoNotify && isTelegramReady(notificationConfig) && globalPassed && sensorPassed) {
             lastNotificationRef.current = now;
+            lastNotificationBySensorRef.current[sensorKey] = now;
             dispatchNotification({
               config: notificationConfig,
               locationName: SENSOR_BY_ID[sensorKey]?.name || sensorKey,
@@ -227,13 +233,35 @@ export default function App() {
               thresholdNorm,
               gaitPhase: phase,
             })
-              .then(() => toast.success('Alert sent to Telegram', { id: 'notif-toast' }))
+              .then(() => toast.success(`Alert sent to Telegram (${SENSOR_BY_ID[sensorKey]?.name || sensorKey})`, { id: 'notif-toast' }))
               .catch((err) => toast.error(err.message, { id: 'notif-err' }));
           }
         } else if (activeEvt) {
+          const prevPeak = activeEvt.peakLoad;
           if (loadPct > activeEvt.peakLoad) activeEvt.peakLoad = loadPct;
           activeEvt.durationMs = now - activeEvt.startTime;
           setEvents((prev) => prev.map((e) => (e.id === activeEvt.id ? { ...e, peakLoad: activeEvt.peakLoad, durationMs: activeEvt.durationMs } : e)));
+
+          // Send an up-to-date alert if pressure spikes significantly higher during an ongoing stance
+          const lastSensorNotif = lastNotificationBySensorRef.current[sensorKey] || 0;
+          const isMajorSpike = (loadPct >= 90 && prevPeak < 90) || (loadPct >= prevPeak + 12);
+          const globalPassed = (now - lastNotificationRef.current) >= 6000;
+          const sensorPassed = (now - lastSensorNotif) >= Math.min(cooldownMs, 20000);
+
+          if (isMajorSpike && notificationConfig.autoNotify && isTelegramReady(notificationConfig) && globalPassed && sensorPassed) {
+            lastNotificationRef.current = now;
+            lastNotificationBySensorRef.current[sensorKey] = now;
+            dispatchNotification({
+              config: notificationConfig,
+              locationName: SENSOR_BY_ID[sensorKey]?.name || sensorKey,
+              normalizedLoad: loadPct,
+              rawVal: rawReadings[sensorKey],
+              thresholdNorm,
+              gaitPhase: phase,
+            })
+              .then(() => toast.success(`Spike alert sent to Telegram (${SENSOR_BY_ID[sensorKey]?.name || sensorKey})`, { id: 'notif-toast' }))
+              .catch((err) => toast.error(err.message, { id: 'notif-err' }));
+          }
         }
       } else if (loadPct < thresholdNorm - 3) {
         breachStartRef.current[sensorKey] = null;

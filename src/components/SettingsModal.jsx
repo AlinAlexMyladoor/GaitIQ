@@ -91,7 +91,7 @@ function SettingsDialog({
     setChatCheck({ state: 'loading', text: 'Looking for your chat…' });
     try {
       const { chatId, label } = await detectChat(localNotif.telegramBotToken);
-      setN({ telegramChatId: chatId });
+      setN({ telegramChatId: chatId, autoNotify: true });
       setChatCheck({ state: 'ok', text: `Found chat with ${label}` });
     } catch (err) {
       setChatCheck({ state: 'err', text: err.message });
@@ -271,7 +271,10 @@ function SettingsDialog({
                     <div className="field" style={{ flex: 1 }}>
                       <label className="label" htmlFor="notif-cooldown">Minimum gap between alerts</label>
                       <select id="notif-cooldown" className="inp" value={localNotif.cooldownMinutes} onChange={(e) => setN({ cooldownMinutes: Number(e.target.value) })}>
+                        <option value={0.25}>15 seconds (Immediate / Real-time)</option>
+                        <option value={0.5}>30 seconds (Recommended)</option>
                         <option value={1}>1 minute</option>
+                        <option value={3}>3 minutes</option>
                         <option value={5}>5 minutes</option>
                         <option value={15}>15 minutes</option>
                       </select>
@@ -287,9 +290,9 @@ function SettingsDialog({
                 </div>
 
                 <div className="msg-preview" aria-label="Example alert message">
-                  🔴 <b>GaitIQ · Pressure alert</b><br />
-                  <b>Site</b> 1st Metatarsal &nbsp;·&nbsp; <b>Load</b> 88% (limit {thresholdNorm}%)<br />
-                  <b>Phase</b> Forefoot push-off
+                  🚨 <b>GaitIQ · CRITICAL PRESSURE SPIKE</b><br />
+                  <b>Sensor Site:</b> 1st Metatarsal &nbsp;·&nbsp; <b>Measured Load:</b> 92% (Limit: {thresholdNorm}%)<br />
+                  <b>Gait Phase:</b> Dynamic Stance &nbsp;·&nbsp; <i>Immediate offloading advised</i>
                 </div>
 
                 <p className="hint">The bot token stays in this browser and is only sent to Telegram. Research prototype: not a medical alarm.</p>
