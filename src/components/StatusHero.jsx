@@ -70,7 +70,7 @@ export default function StatusHero({
 
   return (
     <section className={`card hero is-${status} animate-in`} aria-live="polite">
-      <div style={{ display: 'flex', gap: 18, alignItems: 'center', minWidth: 0 }}>
+      <div className="hero-main">
         <div className="hero-icon"><Icon size={26} strokeWidth={2} /></div>
         <div style={{ minWidth: 0 }}>
           <div className="eyebrow">Plantar load status</div>

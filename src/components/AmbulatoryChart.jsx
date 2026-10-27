@@ -63,25 +63,29 @@ export default function AmbulatoryChart({
           <p className="card-sub num">{chartData.length} samples · last {TIME_RANGES[rangeIdx].label}</p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        <div className="chart-controls">
+          <div className="chart-toggles">
             {SENSORS.map((ch) => (
               <button key={ch.id} type="button" className="chip" aria-pressed={vis[ch.id]} onClick={() => setVis((p) => ({ ...p, [ch.id]: !p[ch.id] }))} title={`Toggle ${ch.name}`}>
                 <span style={{ width: 8, height: 8, borderRadius: 3, background: vis[ch.id] ? ch.color : 'var(--t3)' }} />{ch.short}
               </button>
             ))}
           </div>
-          <div className="seg" role="group" aria-label="Time window">
-            {TIME_RANGES.map((r, i) => (
-              <button key={r.label} type="button" aria-pressed={rangeIdx === i} onClick={() => setRangeIdx(i)}>{r.label}</button>
-            ))}
+          <div className="chart-actions">
+            <div className="seg" role="group" aria-label="Time window">
+              {TIME_RANGES.map((r, i) => (
+                <button key={r.label} type="button" aria-pressed={rangeIdx === i} onClick={() => setRangeIdx(i)}>{r.label}</button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button id="btn-chart-pause" type="button" className="btn btn-icon btn-sm" onClick={onTogglePause} title={isPaused ? 'Resume recording' : 'Pause recording'}>
+                {isPaused ? <Play size={14} /> : <Pause size={14} />}
+              </button>
+              <button id="btn-chart-clear" type="button" className="btn btn-icon btn-sm" onClick={onClearHistory} title="Reset telemetry buffer">
+                <RotateCcw size={14} />
+              </button>
+            </div>
           </div>
-          <button id="btn-chart-pause" type="button" className="btn btn-icon btn-sm" onClick={onTogglePause} title={isPaused ? 'Resume recording' : 'Pause recording'}>
-            {isPaused ? <Play size={14} /> : <Pause size={14} />}
-          </button>
-          <button id="btn-chart-clear" type="button" className="btn btn-icon btn-sm" onClick={onClearHistory} title="Reset telemetry buffer">
-            <RotateCcw size={14} />
-          </button>
         </div>
       </div>
 

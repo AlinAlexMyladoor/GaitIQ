@@ -80,7 +80,7 @@ export default function FootHeatmap({ sensorNorm = {}, peakNorm = {}, thresholdN
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, borderTop: '1px solid var(--border-soft)', paddingTop: 10 }}>
+      <div className="foot-sites-grid">
         {NODES.map((n) => {
           const p = sensorNorm[n.id] ?? 0;
           const over = p >= thresholdNorm;

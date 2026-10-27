@@ -29,7 +29,7 @@ export default function EventLog({ events = [], onAcknowledge, onAcknowledgeAll,
           <p className="card-sub">{activeCount > 0 ? `${activeCount} active now` : 'No active events'}</p>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="event-controls">
           <div className="seg" role="group" aria-label="Filter events">
             {FILTERS.map((f) => (
               <button key={f.id} type="button" aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>{f.label}</button>

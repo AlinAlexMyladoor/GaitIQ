@@ -22,7 +22,7 @@ export default function SessionSummary({
           <h2 className="card-title">Session overview</h2>
           <p className="card-sub">Cumulative telemetry and load distribution</p>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="session-actions">
           <button id="btn-audio-toggle" type="button" className={`btn btn-sm ${soundAlert ? 'btn-active' : ''}`} onClick={onToggleSound} title="Audible warning when a threshold is crossed">
             {soundAlert ? <Volume2 size={14} /> : <VolumeX size={14} />}{soundAlert ? 'Audio on' : 'Muted'}
           </button>
@@ -76,7 +76,7 @@ export default function SessionSummary({
         </div>
         <input type="range" min={30} max={98} step={1} value={thresholdNorm} style={{ '--pct': `${sliderFill}%` }}
           onChange={(e) => onThresholdChange && onThresholdChange(Number(e.target.value))} aria-label="Alert threshold" />
-        <div className="no-print" style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
+        <div className="no-print session-presets">
           {PRESETS.map((p) => (
             <button key={p.label} type="button" className="chip" aria-pressed={thresholdNorm === p.value} onClick={() => onThresholdChange && onThresholdChange(p.value)}>
               {p.label} · {p.value}%

@@ -539,7 +539,7 @@ export default function App() {
 
           <div className="topbar-spacer" />
 
-          <div className="topbar-group">
+          <div className="topbar-group topbar-source">
             <div className="seg" role="group" aria-label="Data source">
               <button id="btn-live" type="button" aria-pressed={dataSource === 'firebase'} onClick={() => handleSwitchSource('firebase')}>
                 <span className={`dot ${dataSource === 'firebase' && isReceivingTelemetry ? 'dot-ok dot-live' : ''}`} style={{ width: 7, height: 7 }} />Live
@@ -548,13 +548,13 @@ export default function App() {
             </div>
 
             {dataSource === 'simulator' && (
-              <select id="select-scenario" className="inp inp-sm hide-sm" value={simScenarioKey} onChange={(e) => setSimScenarioKey(e.target.value)} title="Simulation test pattern" aria-label="Simulation scenario">
+              <select id="select-scenario" className="inp inp-sm" value={simScenarioKey} onChange={(e) => setSimScenarioKey(e.target.value)} title="Simulation test pattern" aria-label="Simulation scenario">
                 {Object.values(SIMULATION_SCENARIOS).map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
               </select>
             )}
           </div>
 
-          <div className="topbar-group">
+          <div className="topbar-group topbar-actions">
             <button type="button" className="cmd-trigger" onClick={() => setIsPaletteOpen(true)} aria-label="Open command palette">
               <Search size={15} /><span className="cmd-label">Search or run command…</span><span className="kbd">{isMac ? '⌘' : 'Ctrl'} K</span>
             </button>

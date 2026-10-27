@@ -33,13 +33,13 @@ export default function DeviceHealth({
 
   return (
     <div className="card strip animate-in delay-1">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div className="strip-status">
         <span className={`dot ${healthy ? 'dot-ok dot-live' : 'dot-warn'}`} />
         <strong style={{ fontSize: 13.5, fontWeight: 650 }}>{label}</strong>
         {isLive && !healthy && elapsedSec !== null && <span className="pill pill-warn">{elapsedSec}s silent</span>}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+      <div className="strip-actions">
         {healthy && samplingRate > 0 && (
           <span className="strip-metric"><Activity size={14} />Rate <strong className="num">{samplingRate.toFixed(1)} Hz</strong></span>
         )}
