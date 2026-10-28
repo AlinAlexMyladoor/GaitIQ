@@ -7,7 +7,7 @@ export default function PressureCards({
   peakNorm = {},
   rawSensorData = {},
   history = [],
-  thresholdNorm = 78,
+  thresholdNorm = 50,
   showDiagnostics = false,
   selectedSensor = null,
   onSelectSensor,

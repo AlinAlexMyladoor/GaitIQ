@@ -12,8 +12,8 @@ const API = 'https://api.telegram.org';
 
 export const DEFAULT_CONFIG = {
   recipientName: '',
-  telegramBotToken: '',
-  telegramChatId: '',
+  telegramBotToken: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TELEGRAM_BOT_TOKEN) || '',
+  telegramChatId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TELEGRAM_CHAT_ID) || '',
   botUsername: '',        // filled in after the token is verified
   autoNotify: true,       // send a message automatically when a site goes over the threshold
   notifyOffline: true,    // also send a message when the insole stops streaming
@@ -24,12 +24,15 @@ export const DEFAULT_CONFIG = {
 export const getStoredCaretakerConfig = () => {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    const envToken = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TELEGRAM_BOT_TOKEN) || '';
+    const envChatId = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TELEGRAM_CHAT_ID) || '';
+
     if (saved && typeof saved === 'object') {
       return {
         ...DEFAULT_CONFIG,
         recipientName: saved.recipientName && saved.recipientName !== 'Caregiver / Researcher' ? saved.recipientName : '',
-        telegramBotToken: saved.telegramBotToken || '',
-        telegramChatId: saved.telegramChatId || '',
+        telegramBotToken: saved.telegramBotToken || envToken,
+        telegramChatId: saved.telegramChatId || envChatId,
         botUsername: saved.botUsername || '',
         autoNotify: saved.autoNotify !== false,
         notifyOffline: saved.notifyOffline !== false,

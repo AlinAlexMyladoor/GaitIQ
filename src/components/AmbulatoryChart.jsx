@@ -33,7 +33,7 @@ function ChartTooltip({ active, payload, label, thresholdNorm }) {
 }
 
 export default function AmbulatoryChart({
-  history = [], thresholdNorm = 78, isPaused, onTogglePause, onClearHistory,
+  history = [], thresholdNorm = 50, isPaused, onTogglePause, onClearHistory,
   dataSource, isStale = false, onSwitchToSimulation,
 }) {
   const [rangeIdx, setRangeIdx] = useState(0);

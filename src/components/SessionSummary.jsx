@@ -2,14 +2,14 @@ import React from 'react';
 import { Volume2, VolumeX, Download, Printer, Info, Send } from 'lucide-react';
 
 const PRESETS = [
-  { label: 'Strict', value: 50 },
-  { label: 'Default', value: 78 },
-  { label: 'Tolerant', value: 90 },
+  { label: 'Alert', value: 50 },
+  { label: 'Standard', value: 75 },
+  { label: 'High', value: 90 },
 ];
 
 export default function SessionSummary({
   peakOverallNorm = 0, peakSensorName = '—', timeAboveThresholdMs = 0, alertCount = 0,
-  forefootPct = 50, thresholdNorm = 78, onThresholdChange,
+  forefootPct = 50, thresholdNorm = 50, onThresholdChange,
   soundAlert, onToggleSound, onExportCSV, onPrint, onSendSummary, telegramReady = false,
 }) {
   const heelPct = 100 - forefootPct;

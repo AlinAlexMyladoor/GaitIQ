@@ -45,7 +45,7 @@ export default function StatusHero({
   status = 'idle',
   maxLoad = 0,
   hottestName = '—',
-  thresholdNorm = 78,
+  thresholdNorm = 50,
   gaitPhase = '—',
   sessionStart,
   forefootPct = 50,

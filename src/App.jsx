@@ -62,7 +62,25 @@ export default function App() {
   const [rawSensorData, setRawSensorData] = useState({ ...EMPTY_READINGS });
   const [sensorNorm, setSensorNorm] = useState({ ...EMPTY_READINGS });
   const [peakNorm, setPeakNorm] = useState({ ...EMPTY_READINGS });
-  const [thresholdNorm, setThresholdNorm] = useState(78);
+  const [thresholdNorm, setThresholdNorm] = useState(() => {
+    try {
+      const saved = localStorage.getItem('smart_insole_alert_threshold');
+      if (saved !== null) {
+        const val = Number(saved);
+        if (!isNaN(val) && val >= 30 && val <= 98) return val;
+      }
+    } catch { /* ignore */ }
+    return 50;
+  });
+
+  const handleThresholdChange = useCallback((newVal) => {
+    const val = Math.min(98, Math.max(30, Number(newVal)));
+    setThresholdNorm(val);
+    try {
+      localStorage.setItem('smart_insole_alert_threshold', String(val));
+    } catch { /* ignore */ }
+  }, []);
+
   const [history, setHistory] = useState([]);
   const [gaitPhase, setGaitPhase] = useState('Resting Stance');
 
@@ -533,11 +551,14 @@ export default function App() {
     { id: 'fs', group: 'Interface', label: isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen', icon: Maximize2, run: toggleFullscreen },
     { id: 'set-conn', group: 'Settings', label: 'Open connection settings', icon: Settings, run: () => openSettings('connection') },
     { id: 'set-map', group: 'Settings', label: 'Open sensor mapping', icon: Sliders, run: () => openSettings('mapping') },
+    { id: 'th-50', group: 'Alert threshold', label: 'Set alert threshold to 50%', icon: Sliders, hint: thresholdNorm === 50 ? 'Active' : '', keywords: 'alert threshold 50 percent strict limit telegram', run: () => handleThresholdChange(50) },
+    { id: 'th-75', group: 'Alert threshold', label: 'Set alert threshold to 75%', icon: Sliders, hint: thresholdNorm === 75 ? 'Active' : '', keywords: 'alert threshold 75 percent standard', run: () => handleThresholdChange(75) },
+    { id: 'th-90', group: 'Alert threshold', label: 'Set alert threshold to 90%', icon: Sliders, hint: thresholdNorm === 90 ? 'Active' : '', keywords: 'alert threshold 90 percent high tolerant', run: () => handleThresholdChange(90) },
     { id: 'tg-summary', group: 'Telegram', label: 'Send session summary to Telegram', icon: Send, keywords: 'share notify message', run: handleSendSummary },
     { id: 'set-alert', group: 'Telegram', label: 'Open Telegram setup', icon: Send, keywords: 'bot alerts notifications chat', run: () => openSettings('alerts') },
-  ], [dataSource, simScenarioKey, showDiagnostics, isChartPaused, soundAlert, theme, isFullscreen,
+  ], [dataSource, simScenarioKey, showDiagnostics, isChartPaused, soundAlert, theme, isFullscreen, thresholdNorm,
     handleSwitchSource, handleTare, handleAcknowledgeAll, handleResetSession, handleExportCSV, handleExportEvents,
-    handlePrint, toggleTheme, toggleFullscreen, openSettings, handleSendSummary]);
+    handlePrint, toggleTheme, toggleFullscreen, openSettings, handleSendSummary, handleThresholdChange]);
 
   const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
@@ -669,7 +690,7 @@ export default function App() {
             alertCount={alertCount}
             forefootPct={forefootPct}
             thresholdNorm={thresholdNorm}
-            onThresholdChange={setThresholdNorm}
+            onThresholdChange={handleThresholdChange}
             soundAlert={soundAlert}
             onToggleSound={() => setSoundAlert((s) => !s)}
             onExportCSV={handleExportCSV}
@@ -707,6 +728,7 @@ export default function App() {
         onTare={handleTare}
         onExportCSV={handleExportCSV}
         thresholdNorm={thresholdNorm}
+        onUpdateThreshold={handleThresholdChange}
       />
 
       <CommandPalette isOpen={isPaletteOpen} onClose={() => setIsPaletteOpen(false)} commands={commands} />

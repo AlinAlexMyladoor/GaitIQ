@@ -35,11 +35,13 @@ export default function SettingsModal(props) {
 
 function SettingsDialog({
   onClose, initialTab = 'connection', mapping, onUpdateMapping, adcResolution, onUpdateAdcResolution,
-  notificationConfig, onUpdateNotificationConfig, onSendTestPacket, onResetSession, onTare, onExportCSV, thresholdNorm,
+  notificationConfig, onUpdateNotificationConfig, onSendTestPacket, onResetSession, onTare, onExportCSV,
+  thresholdNorm = 50, onUpdateThreshold,
 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [localMapping, setLocalMapping] = useState(mapping);
   const [localNotif, setLocalNotif] = useState(notificationConfig);
+  const [localThreshold, setLocalThreshold] = useState(thresholdNorm);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [tokenCheck, setTokenCheck] = useState({ state: localNotif0(notificationConfig) ? 'ok' : 'idle', text: localNotif0(notificationConfig) ? `Connected to @${notificationConfig.botUsername}` : '' });
   const [chatCheck, setChatCheck] = useState({ state: notificationConfig.telegramChatId ? 'ok' : 'idle', text: notificationConfig.telegramChatId ? 'Chat ID saved' : '' });
@@ -58,6 +60,7 @@ function SettingsDialog({
     onUpdateMapping(localMapping);
     try { localStorage.setItem('smart_insole_fsr_mapping', JSON.stringify(localMapping)); } catch { /* ignore */ }
     onUpdateNotificationConfig(localNotif);
+    if (onUpdateThreshold) onUpdateThreshold(localThreshold);
     toast.success('Configuration saved');
     onClose();
   };
@@ -260,7 +263,31 @@ function SettingsDialog({
                 <div>
                   <div className="group-title">Alert rules</div>
                   <div className="setting-row" style={{ paddingTop: 0 }}>
-                    <div><div className="setting-title">Pressure alerts</div><div className="setting-desc">Message me when a site stays over the threshold</div></div>
+                    <div>
+                      <div className="setting-title">Alert threshold: <span className="mono" style={{ color: 'var(--primary)', fontWeight: 700 }}>{localThreshold}%</span></div>
+                      <div className="setting-desc">Send Telegram notification when sensor pressure exceeds this level</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 160 }}>
+                      <input
+                        id="setting-alert-threshold"
+                        type="range"
+                        min={30}
+                        max={98}
+                        step={1}
+                        value={localThreshold}
+                        style={{ flex: 1, '--pct': `${Math.round(((localThreshold - 30) / (98 - 30)) * 100)}%` }}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setLocalThreshold(val);
+                          if (onUpdateThreshold) onUpdateThreshold(val);
+                        }}
+                        aria-label="Alert threshold percentage"
+                      />
+                      <span className="pill pill-primary num" style={{ width: 44, textAlign: 'center' }}>{localThreshold}%</span>
+                    </div>
+                  </div>
+                  <div className="setting-row">
+                    <div><div className="setting-title">Pressure alerts</div><div className="setting-desc">Message me when a site stays over {localThreshold}%</div></div>
                     <input id="toggle-auto-notify" type="checkbox" className="switch" checked={!!localNotif.autoNotify} onChange={(e) => setN({ autoNotify: e.target.checked })} aria-label="Send pressure alerts to Telegram" />
                   </div>
                   <div className="setting-row">
@@ -290,9 +317,9 @@ function SettingsDialog({
                 </div>
 
                 <div className="msg-preview" aria-label="Example alert message">
-                  🚨 <b>GaitIQ · CRITICAL PRESSURE SPIKE</b><br />
-                  <b>Sensor Site:</b> 1st Metatarsal &nbsp;·&nbsp; <b>Measured Load:</b> 92% (Limit: {thresholdNorm}%)<br />
-                  <b>Gait Phase:</b> Dynamic Stance &nbsp;·&nbsp; <i>Immediate offloading advised</i>
+                  🔴 <b>GaitIQ · High Pressure Alert</b><br />
+                  <b>Sensor Site:</b> 1st Metatarsal &nbsp;·&nbsp; <b>Measured Load:</b> {Math.max(52, localThreshold + 2)}% (Limit: {localThreshold}%)<br />
+                  <b>Gait Phase:</b> Forefoot Push-Off &nbsp;·&nbsp; <i>Please check insole fit and pressure</i>
                 </div>
 
                 <p className="hint">The bot token stays in this browser and is only sent to Telegram. Research prototype: not a medical alarm.</p>

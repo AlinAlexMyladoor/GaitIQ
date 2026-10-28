@@ -8,7 +8,7 @@ const NODES = [
   { id: 'heel',            cx: 128, cy: 338, r: 31 },
 ].map((n) => ({ ...n, ...SENSORS.find((s) => s.id === n.id) }));
 
-export default function FootHeatmap({ sensorNorm = {}, peakNorm = {}, thresholdNorm = 78, selectedSensor, onSelectSensor }) {
+export default function FootHeatmap({ sensorNorm = {}, peakNorm = {}, thresholdNorm = 50, selectedSensor, onSelectSensor }) {
   const [hovered, setHovered] = useState(null);
   const activeId = hovered || selectedSensor;
   const activeNode = NODES.find((n) => n.id === activeId);
