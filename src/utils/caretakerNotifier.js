@@ -14,6 +14,7 @@ export const DEFAULT_CONFIG = {
   recipientName: '',
   telegramBotToken: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TELEGRAM_BOT_TOKEN) || '',
   telegramChatId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TELEGRAM_CHAT_ID) || '',
+  telegramApiBaseUrl: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TELEGRAM_API_BASE) || '',
   botUsername: '',        // filled in after the token is verified
   autoNotify: true,       // send a message automatically when a site goes over the threshold
   notifyOffline: true,    // also send a message when the insole stops streaming
@@ -26,6 +27,7 @@ export const getStoredCaretakerConfig = () => {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
     const envToken = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TELEGRAM_BOT_TOKEN) || '';
     const envChatId = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TELEGRAM_CHAT_ID) || '';
+    const envApiBase = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TELEGRAM_API_BASE) || '';
 
     if (saved && typeof saved === 'object') {
       return {
@@ -33,6 +35,7 @@ export const getStoredCaretakerConfig = () => {
         recipientName: saved.recipientName && saved.recipientName !== 'Caregiver / Researcher' ? saved.recipientName : '',
         telegramBotToken: saved.telegramBotToken || envToken,
         telegramChatId: saved.telegramChatId || envChatId,
+        telegramApiBaseUrl: saved.telegramApiBaseUrl || envApiBase,
         botUsername: saved.botUsername || '',
         autoNotify: saved.autoNotify !== false,
         notifyOffline: saved.notifyOffline !== false,
@@ -56,17 +59,18 @@ export const saveCaretakerConfig = (config) => {
 export const isTelegramReady = (config) => !!(config?.telegramBotToken && config?.telegramChatId);
 
 // ── Low-level API call ─────────────────────────────────────────────────
-const callTelegram = async (token, method, body) => {
+const callTelegram = async (token, method, body, customBaseUrl) => {
   if (!token || !token.trim()) throw new Error('Enter your bot token first.');
+  const base = (customBaseUrl && customBaseUrl.trim()) ? customBaseUrl.trim().replace(/\/+$/, '') : API;
   let res;
   try {
-    res = await fetch(`${API}/bot${token.trim()}/${method}`, {
+    res = await fetch(`${base}/bot${token.trim()}/${method}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body || {}),
     });
-  } catch {
-    throw new Error('Could not reach Telegram. Check your internet connection.');
+  } catch (err) {
+    throw new Error('Connection to Telegram was reset by your ISP/network. Turn on 1.1.1.1 (Cloudflare WARP) or VPN, or use a Telegram proxy.');
   }
   let data = null;
   try { data = await res.json(); } catch { /* non-JSON error page */ }
@@ -78,8 +82,8 @@ const callTelegram = async (token, method, body) => {
 };
 
 /** Confirms the token is valid and returns the bot's public identity. */
-export const verifyBotToken = async (token) => {
-  const me = await callTelegram(token, 'getMe');
+export const verifyBotToken = async (token, customBaseUrl) => {
+  const me = await callTelegram(token, 'getMe', null, customBaseUrl);
   return { username: me.username, name: me.first_name };
 };
 
@@ -87,8 +91,8 @@ export const verifyBotToken = async (token) => {
  * Finds the chat that most recently messaged the bot (the user presses "Start" first).
  * Returns { chatId, label } or throws a helpful error.
  */
-export const detectChat = async (token) => {
-  const updates = await callTelegram(token, 'getUpdates', { limit: 25, allowed_updates: ['message', 'my_chat_member'] });
+export const detectChat = async (token, customBaseUrl) => {
+  const updates = await callTelegram(token, 'getUpdates', { limit: 25, allowed_updates: ['message', 'my_chat_member'] }, customBaseUrl);
   const chats = updates
     .map((u) => u.message?.chat || u.my_chat_member?.chat)
     .filter(Boolean);
@@ -160,7 +164,7 @@ export const sendTelegram = async (config, html) => {
     text: html,
     parse_mode: 'HTML',
     disable_web_page_preview: true,
-  });
+  }, config.telegramApiBaseUrl);
   return { success: true, detail: 'Sent to Telegram.' };
 };
 

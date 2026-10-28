@@ -81,7 +81,7 @@ function SettingsDialog({
   const handleVerify = async () => {
     setTokenCheck({ state: 'loading', text: 'Checking token…' });
     try {
-      const bot = await verifyBotToken(localNotif.telegramBotToken);
+      const bot = await verifyBotToken(localNotif.telegramBotToken, localNotif.telegramApiBaseUrl);
       setN({ botUsername: bot.username });
       setTokenCheck({ state: 'ok', text: `Connected to @${bot.username}` });
     } catch (err) {
@@ -93,7 +93,7 @@ function SettingsDialog({
   const handleDetect = async () => {
     setChatCheck({ state: 'loading', text: 'Looking for your chat…' });
     try {
-      const { chatId, label } = await detectChat(localNotif.telegramBotToken);
+      const { chatId, label } = await detectChat(localNotif.telegramBotToken, localNotif.telegramApiBaseUrl);
       setN({ telegramChatId: chatId, autoNotify: true });
       setChatCheck({ state: 'ok', text: `Found chat with ${label}` });
     } catch (err) {
@@ -314,6 +314,24 @@ function SettingsDialog({
                   {!localNotif.autoNotify && isTelegramReady(localNotif) && (
                     <div className="callout callout-warn" style={{ marginTop: 10 }}><CircleAlert size={16} />Pressure alerts are switched off, so Telegram will stay quiet.</div>
                   )}
+                  <details className="adv" style={{ marginTop: 14 }}>
+                    <summary>ISP connection issues / Custom API Proxy</summary>
+                    <div className="adv-body field" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <p style={{ fontSize: 12, color: 'var(--t2)', margin: 0, lineHeight: 1.5 }}>
+                        If your ISP blocks <code>api.telegram.org</code> (causing <code>ERR_CONNECTION_RESET</code>), turn on <b>1.1.1.1 (Cloudflare WARP)</b> or a VPN on your device, or enter a custom reverse proxy / Cloudflare Worker URL below.
+                      </p>
+                      <label className="label" htmlFor="tg-proxy" style={{ marginTop: 4 }}>Custom API Gateway Base URL</label>
+                      <input
+                        id="tg-proxy"
+                        type="text"
+                        className="inp mono"
+                        style={{ fontSize: 12 }}
+                        placeholder="https://api.telegram.org"
+                        value={localNotif.telegramApiBaseUrl || ''}
+                        onChange={(e) => setN({ telegramApiBaseUrl: e.target.value })}
+                      />
+                    </div>
+                  </details>
                 </div>
 
                 <div className="msg-preview" aria-label="Example alert message">
